@@ -108,6 +108,7 @@
       <button class="songButton" data-src="song3.mp3"><img src="song3.png" alt="Kappale 3"></button>
       <button class="songButton" data-src="song4.mp3"><img src="song4.png" alt="Kappale 4"></button>
       <button class="songButton" data-src="song5.mp3"><img src="song5.png" alt="Kappale 5"></button>
+      <button class="songButton" data-src="song6.mp3"><img src="song6.png" alt="Kappale 6"></button>
     </div>
     <div class="timeSelector">
       <label><input type="radio" name="playTime" value="5" checked> 5s</label>
@@ -160,9 +161,15 @@
       if (isPlaying || !audio1) return;
       isPlaying = true;
 
-      const remainingTime = audio1.duration ? (audio1.duration - audio1.currentTime) : Infinity;
+      // Ladataan kesto tarvittaessa
+      if (isNaN(audio1.duration)) {
+        await new Promise(resolve => {
+          audio1.addEventListener('loadedmetadata', resolve, { once: true });
+        });
+      }
+
+      const remainingTime = audio1.duration - audio1.currentTime;
       if (remainingTime <= 0.1) {
-        // Kappale loppui
         audio1 = null;
         songSelector.style.display = "flex";
         startBtn.style.display = "none";
@@ -172,7 +179,6 @@
 
       const playChunk = Math.min(selectedSeconds, remainingTime);
 
-      // Animoi tausta ja vaihda napin väri
       startBtn.style.backgroundColor = "#3BC28F";
       iconImg.src = "icon1.png";
       overlay.style.transition = "none";
@@ -191,12 +197,10 @@
         return;
       }
 
-      // Odota soittoaika
       await new Promise(resolve => setTimeout(resolve, playChunk * 1000));
 
       audio1.pause();
 
-      // Napin tila: merkkiääni
       startBtn.style.backgroundColor = "#8CDA26";
       iconImg.src = "icon2.png";
       overlay.style.transition = "none";
@@ -213,8 +217,7 @@
         audio2.onended = resolve;
       });
 
-      // Jos kappale loppui, palataan alkuun
-      if (audio1.duration && audio1.currentTime >= audio1.duration - 0.1) {
+      if (audio1.currentTime >= audio1.duration - 0.1) {
         audio1 = null;
         songSelector.style.display = "flex";
         startBtn.style.display = "none";
