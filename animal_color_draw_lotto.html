@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <title>Eläin- ja väriarvonta</title>
+  <style>
+    body {
+      font-family: "Comic Sans MS", cursive, sans-serif;
+      background-color: #f0f8ff;
+      padding: 20px;
+      text-align: center;
+    }
+    .hidden {
+      display: none;
+    }
+    .box {
+      border: 2px solid #000;
+      border-radius: 10px;
+      margin: 10px auto;
+      padding: 15px;
+      width: 200px;
+      color: black;
+    }
+  </style>
+</head>
+<body>
+  <h1>Eläin- ja väriarvonta</h1>
+
+  <div id="step1">
+    <label>Kuinka monta osallistujaa? (1-8)</label><br>
+    <input type="number" id="participantCount" min="1" max="8">
+    <button onclick="askNames()">Jatka</button>
+  </div>
+
+  <div id="step2" class="hidden">
+    <h2>Kirjoita osallistujien nimet</h2>
+    <div id="nameInputs"></div>
+    <button onclick="startDraw()">Arvo eläimet ja värit!</button>
+  </div>
+
+  <div id="results" class="hidden">
+    <h2>Arvonnan tulokset</h2>
+    <div id="resultBoxes"></div>
+  </div>
+
+  <script>
+    const animals = ["Kissa", "Koira", "Pöllö", "Sammakko", "Siili", "Pingviini", "Kana", "Kettu"];
+    const colors = [
+      { name: "oranssi", css: "orange" },
+      { name: "pinkki", css: "pink" },
+      { name: "sininen", css: "blue" },
+      { name: "keltainen", css: "yellow" },
+      { name: "violetti", css: "purple" },
+      { name: "punainen", css: "red" },
+      { name: "vihreä", css: "green" },
+      { name: "ruskea", css: "brown" }
+    ];
+
+    function askNames() {
+      const count = parseInt(document.getElementById("participantCount").value);
+      if (isNaN(count) || count < 1 || count > 8) {
+        alert("Anna osallistujamäärä väliltä 1-8.");
+        return;
+      }
+      const nameInputs = document.getElementById("nameInputs");
+      nameInputs.innerHTML = "";
+      for (let i = 0; i < count; i++) {
+        nameInputs.innerHTML += `<input type="text" placeholder="Osallistuja ${i + 1}" id="name${i}"><br>`;
+      }
+      document.getElementById("step1").classList.add("hidden");
+      document.getElementById("step2").classList.remove("hidden");
+    }
+
+    function startDraw() {
+      const count = parseInt(document.getElementById("participantCount").value);
+      const names = [];
+      for (let i = 0; i < count; i++) {
+        const name = document.getElementById(`name${i}`).value.trim();
+        if (!name) {
+          alert("Kaikkiin nimikenttiin täytyy täyttää nimi.");
+          return;
+        }
+        names.push(name);
+      }
+
+      const shuffledAnimals = animals.slice().sort(() => 0.5 - Math.random());
+      const shuffledColors = colors.slice().sort(() => 0.5 - Math.random());
+
+      const resultBoxes = document.getElementById("resultBoxes");
+      resultBoxes.innerHTML = "";
+
+      for (let i = 0; i < count; i++) {
+        const animal = shuffledAnimals[i];
+        const color = shuffledColors[i];
+
+        const box = document.createElement("div");
+        box.className = "box";
+        box.style.backgroundColor = color.css;
+        box.innerHTML = `<strong>${names[i]}</strong><br>Eläin: ${animal}<br>Väri: ${color.name}`;
+        resultBoxes.appendChild(box);
+      }
+
+      document.getElementById("step2").classList.add("hidden");
+      document.getElementById("results").classList.remove("hidden");
+    }
+  </script>
+</body>
+</html>
