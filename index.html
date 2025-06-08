@@ -83,18 +83,6 @@
       border-radius: 20px;
       border: 3px solid #444;
     }
-
-    .timeSelector {
-      display: flex;
-      gap: 20px;
-      font-size: 20px;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .timeSelector label {
-      cursor: pointer;
-    }
   </style>
 </head>
 <body>
@@ -109,13 +97,6 @@
       <button class="songButton" data-src="song4.mp3"><img src="song4.png" alt="Kappale 4"></button>
       <button class="songButton" data-src="song5.mp3"><img src="song5.png" alt="Kappale 5"></button>
       <button class="songButton" data-src="song6.mp3"><img src="song6.png" alt="Kappale 6"></button>
-    </div>
-    <div class="timeSelector">
-      <label><input type="radio" name="playTime" value="5" checked> 5s</label>
-      <label><input type="radio" name="playTime" value="10"> 10s</label>
-      <label><input type="radio" name="playTime" value="15"> 15s</label>
-      <label><input type="radio" name="playTime" value="20"> 20s</label>
-      <label><input type="radio" name="playTime" value="30"> 30s</label>
     </div>
   </div>
 
@@ -133,15 +114,11 @@
     const audio2 = new Audio("BicycleHornSound.mp3");
 
     let audio1 = null;
-    let selectedSeconds = 5;
     let isPlaying = false;
 
     document.querySelectorAll(".songButton").forEach(btn => {
       btn.addEventListener("click", () => {
         const selectedSrc = btn.getAttribute("data-src");
-        const selectedRadio = document.querySelector('input[name="playTime"]:checked');
-        selectedSeconds = parseInt(selectedRadio.value, 10);
-
         audio1 = new Audio(selectedSrc);
         audio1.loop = false;
         audio1.preload = "auto";
@@ -157,11 +134,14 @@
       iconImg.src = "icon3.png";
     }
 
+    function getRandomPlayTime() {
+      return Math.floor(Math.random() * 16) + 5; // 5–20
+    }
+
     startBtn.addEventListener("click", async () => {
       if (isPlaying || !audio1) return;
       isPlaying = true;
 
-      // Ladataan kesto tarvittaessa
       if (isNaN(audio1.duration)) {
         await new Promise(resolve => {
           audio1.addEventListener('loadedmetadata', resolve, { once: true });
@@ -177,7 +157,7 @@
         return;
       }
 
-      const playChunk = Math.min(selectedSeconds, remainingTime);
+      const playChunk = Math.min(getRandomPlayTime(), remainingTime);
 
       startBtn.style.backgroundColor = "#3BC28F";
       iconImg.src = "icon1.png";
@@ -198,7 +178,6 @@
       }
 
       await new Promise(resolve => setTimeout(resolve, playChunk * 1000));
-
       audio1.pause();
 
       startBtn.style.backgroundColor = "#8CDA26";
