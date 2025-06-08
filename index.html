@@ -2,210 +2,156 @@
 <html lang="fi">
 <head>
   <meta charset="UTF-8">
-  <title>Musiikkileikki</title>
+  <title>Äänisoitin</title>
   <style>
-    html, body {
+    body {
       margin: 0;
-      height: 100%;
-      overflow: hidden;
-      background-color: yellow;
+      background-color: #FCF7DA;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: sans-serif;
     }
 
-    #backgroundOverlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 0%;
-      background-color: black;
-      z-index: 0;
-      transition: none;
+    .song-selection {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
     }
 
-    #startBtn {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+    .song-selection img {
+      width: 200px;
+      height: 200px;
+      cursor: pointer;
+      border: 4px solid transparent;
+      border-radius: 20px;
+      transition: border 0.3s;
+    }
+
+    .song-selection img:hover {
+      border: 4px solid #00A651;
+    }
+
+    .main-button {
       width: 500px;
       height: 500px;
       border-radius: 50%;
-      border: none;
       background-color: #FCF7DA;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
-      z-index: 1;
-      transition: background-color 0.3s ease;
-      display: none;
+      transition: background-color 0.3s;
     }
 
-    #icon {
+    .main-button img {
       width: 300px;
       height: 300px;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
     }
 
-    #songSelector {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      gap: 30px;
-      height: 100vh;
-      background-color: yellow;
-      z-index: 2;
-      position: relative;
-    }
-
-    .songOptions {
-      display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .songButton {
-      width: 200px;
-      height: 200px;
-      border: none;
-      background: none;
-      cursor: pointer;
-      padding: 0;
-    }
-
-    .songButton img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 20px;
-      border: 3px solid #444;
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 <body>
-  <div id="backgroundOverlay"></div>
 
-  <!-- Valintanäkymä -->
-  <div id="songSelector">
-    <div class="songOptions">
-      <button class="songButton" data-src="song1.mp3"><img src="song1.png" alt="Kappale 1"></button>
-      <button class="songButton" data-src="song2.mp3"><img src="song2.png" alt="Kappale 2"></button>
-      <button class="songButton" data-src="song3.mp3"><img src="song3.png" alt="Kappale 3"></button>
-      <button class="songButton" data-src="song4.mp3"><img src="song4.png" alt="Kappale 4"></button>
-      <button class="songButton" data-src="song5.mp3"><img src="song5.png" alt="Kappale 5"></button>
-      <button class="songButton" data-src="song6.mp3"><img src="song6.png" alt="Kappale 6"></button>
-    </div>
+  <div id="selectionView" class="song-selection">
+    <img src="img1.png" data-song="song1.mp3">
+    <img src="img2.png" data-song="song2.mp3">
+    <img src="img3.png" data-song="song3.mp3">
+    <img src="img4.png" data-song="song4.mp3">
+    <img src="img5.png" data-song="song5.mp3">
+    <img src="img6.png" data-song="song6.mp3">
   </div>
 
-  <!-- Soiton nappi -->
-  <button id="startBtn">
-    <img id="icon" src="icon3.png" alt="Ikoni">
+  <button id="mainButton" class="main-button hidden">
+    <img id="buttonIcon" src="icon3.png">
   </button>
 
   <script>
-    const songSelector = document.getElementById("songSelector");
-    const startBtn = document.getElementById("startBtn");
-    const iconImg = document.getElementById("icon");
-    const overlay = document.getElementById("backgroundOverlay");
+    const selectionView = document.getElementById('selectionView');
+    const mainButton = document.getElementById('mainButton');
+    const buttonIcon = document.getElementById('buttonIcon');
 
-    const audio2 = new Audio("BicycleHornSound.mp3");
+    let selectedSong = '';
+    let songAudio = null;
+    let hornAudio = new Audio("BicycleHornSound.mp3");
+    let isPlayingSong = false;
+    let isPlayingHorn = false;
+    let currentTime = 0;
 
-    let audio1 = null;
-    let isPlaying = false;
+    // Valitaan kappale
+    document.querySelectorAll('.song-selection img').forEach(img => {
+      img.addEventListener('click', () => {
+        selectedSong = img.getAttribute('data-song');
+        songAudio = new Audio(selectedSong);
+        songAudio.currentTime = currentTime;
+        songAudio.preload = "auto";
 
-    document.querySelectorAll(".songButton").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const selectedSrc = btn.getAttribute("data-src");
-        audio1 = new Audio(selectedSrc);
-        audio1.loop = false;
-        audio1.preload = "auto";
-
-        songSelector.style.display = "none";
-        startBtn.style.display = "block";
-        resetToWaitingState();
+        selectionView.classList.add('hidden');
+        mainButton.classList.remove('hidden');
+        updateButtonState();
       });
     });
 
-    function resetToWaitingState() {
-      startBtn.style.backgroundColor = "#FCF7DA";
-      iconImg.src = "icon3.png";
-    }
+    // Napin logiikka
+    mainButton.addEventListener('click', () => {
+      if (isPlayingHorn) return;
 
-    function getRandomPlayTime() {
-      return Math.floor(Math.random() * 16) + 5; // 5–20
-    }
+      if (!isPlayingSong) {
+        // Jatketaan kappaletta
+        songAudio.currentTime = currentTime;
+        songAudio.play();
+        isPlayingSong = true;
+        updateButtonState();
 
-    startBtn.addEventListener("click", async () => {
-      if (isPlaying || !audio1) return;
-      isPlaying = true;
-
-      if (isNaN(audio1.duration)) {
-        await new Promise(resolve => {
-          audio1.addEventListener('loadedmetadata', resolve, { once: true });
-        });
-      }
-
-      const remainingTime = audio1.duration - audio1.currentTime;
-      if (remainingTime <= 0.1) {
-        audio1 = null;
-        songSelector.style.display = "flex";
-        startBtn.style.display = "none";
-        isPlaying = false;
-        return;
-      }
-
-      const playChunk = Math.min(getRandomPlayTime(), remainingTime);
-
-      startBtn.style.backgroundColor = "#3BC28F";
-      iconImg.src = "icon1.png";
-      overlay.style.transition = "none";
-      overlay.style.width = "0%";
-      requestAnimationFrame(() => {
-        overlay.style.transition = `width ${playChunk}s linear`;
-        overlay.style.width = "100%";
-      });
-
-      audio1.currentTime = audio1.currentTime;
-      try {
-        await audio1.play();
-      } catch (e) {
-        console.error("Kappaleen toisto epäonnistui:", e);
-        isPlaying = false;
-        return;
-      }
-
-      await new Promise(resolve => setTimeout(resolve, playChunk * 1000));
-      audio1.pause();
-
-      startBtn.style.backgroundColor = "#8CDA26";
-      iconImg.src = "icon2.png";
-      overlay.style.transition = "none";
-      overlay.style.width = "100%";
-
-      audio2.currentTime = 0;
-      try {
-        await audio2.play();
-      } catch (e) {
-        console.error("Merkkiäänen soitto epäonnistui:", e);
-      }
-
-      await new Promise(resolve => {
-        audio2.onended = resolve;
-      });
-
-      if (audio1.currentTime >= audio1.duration - 0.1) {
-        audio1 = null;
-        songSelector.style.display = "flex";
-        startBtn.style.display = "none";
+        songAudio.ontimeupdate = () => {
+          currentTime = songAudio.currentTime;
+        };
+        songAudio.onended = () => {
+          currentTime = 0;
+          isPlayingSong = false;
+          mainButton.classList.add('hidden');
+          selectionView.classList.remove('hidden');
+        };
       } else {
-        resetToWaitingState();
-      }
+        // Keskeytetään ja soitetaan äänimerkki
+        songAudio.pause();
+        isPlayingSong = false;
+        updateButtonState();
 
-      isPlaying = false;
+        isPlayingHorn = true;
+        hornAudio.currentTime = 0;
+        hornAudio.play();
+        updateButtonState();
+
+        hornAudio.onended = () => {
+          isPlayingHorn = false;
+          updateButtonState();
+        };
+      }
     });
+
+    function updateButtonState() {
+      if (isPlayingSong) {
+        mainButton.style.backgroundColor = '#3BC28F';
+        buttonIcon.src = 'icon1.png';
+        document.body.style.backgroundColor = '#FFFFFF';
+      } else if (isPlayingHorn) {
+        mainButton.style.backgroundColor = '#8CDA26';
+        buttonIcon.src = 'icon2.png';
+        document.body.style.backgroundColor = '#000000';
+      } else {
+        mainButton.style.backgroundColor = '#FCF7DA';
+        buttonIcon.src = 'icon3.png';
+        document.body.style.backgroundColor = '#FCF7DA';
+      }
+    }
   </script>
 </body>
 </html>
